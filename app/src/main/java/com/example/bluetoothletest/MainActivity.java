@@ -115,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements BluetoothLeListen
 
     }
 
-
     @Override
     public void onAddBluetoothDevice(ScanResult device) {
         Log.d(TAG, "onAddBluetoothDevice");

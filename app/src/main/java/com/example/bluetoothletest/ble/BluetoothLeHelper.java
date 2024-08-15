@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
@@ -93,24 +92,19 @@ public class BluetoothLeHelper {
     private final BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED){
-
-            }
+            Log.d(TAG, "BluetoothGattServerCallback onConnectionStateChange");
         }
 
         @Override
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
-            // 响应读取请求，返回特征值
+            Log.d(TAG, "BluetoothGattServerCallback onCharacteristicReadRequest");
             mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, characteristic.getValue());
         }
 
         @Override
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-            // 设置写入的值
+            Log.d(TAG, "BluetoothGattServerCallback onCharacteristicWriteRequest");
             characteristic.setValue(value);
-            // 如果需要响应，发送响应
             if (responseNeeded) {
                 mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
             }
@@ -126,6 +120,7 @@ public class BluetoothLeHelper {
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            Log.d(TAG, "BluetoothGattCallback onConnectionStateChange");
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 gatt.discoverServices();
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
@@ -134,6 +129,7 @@ public class BluetoothLeHelper {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            Log.d(TAG, "BluetoothGattCallback onServicesDiscovered");
 
         }
 
@@ -141,13 +137,13 @@ public class BluetoothLeHelper {
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
-
+            Log.d(TAG, "BluetoothGattCallback onCharacteristicRead");
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-
+            Log.d(TAG, "BluetoothGattCallback onCharacteristicChanged");
         }
     };
 
@@ -175,12 +171,12 @@ public class BluetoothLeHelper {
     private final AdvertiseCallback mAdvertiseCallback = new AdvertiseCallback() {
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-            Log.d(TAG, "BLE广播开始成功啦");
+            Log.d(TAG, "AdvertiseCallback onStartSuccess");
         }
 
         @Override
         public void onStartFailure(int errorCode) {
-            Log.d(TAG, "BLE广播开始失败啦，原因是 : " + errorCode);
+            Log.d(TAG, "AdvertiseCallback onStartFailure");
         }
     };
 
@@ -200,8 +196,6 @@ public class BluetoothLeHelper {
     public String getMyDeviceAddress(){
         Log.d(TAG, "getMyDeviceAddress");
         if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
-            Log.d(TAG, "getMyDeviceAddress : " + mBluetoothAdapter.getAddress());
-            Log.d(TAG, "getMyDeviceName : " + mBluetoothAdapter.getName());
             return mBluetoothAdapter.getAddress();
         } else {
             return "";

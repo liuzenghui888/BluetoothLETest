@@ -66,7 +66,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         holder.btn_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BluetoothLeHelper.getInstance(mContext).sendNotification(mLeDeviceList.get(position).getDevice(), "Hello World");
+                //BluetoothLeHelper.getInstance(mContext).sendNotification(mLeDeviceList.get(position).getDevice(), "Hello World");
             }
         });
     }
