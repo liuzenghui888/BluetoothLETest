@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">BluetoothLETest</string>
+    <string name="message_send">发送</string>
+    <string name="device_handle">操作</string>
+    <string name="device_name">设备名称</string>
+    <string name="device_ip">设备ip</string>
+    <string name="device_status">设备状态</string>
+    <string name="ble_handle">开启BLE扫描</string>
+    <string name="request_device">清空BLE设备列表</string>
 </resources>
