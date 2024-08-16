@@ -4,12 +4,11 @@ import android.bluetooth.BluetoothDevice;
 
 public class BluetoothLeDevice {
 
-    public BluetoothLeDevice(String address, String name, int rssi, String id, boolean status, String serviceUuid, int type, BluetoothDevice device) {
+    public BluetoothLeDevice(String address, String name, int rssi, boolean deviceStatus, String serviceUuid, int type, BluetoothDevice device) {
         this.address = address;
         this.name = name;
         this.rssi = rssi;
-        this.id = id;
-        this.status = status;
+        this.deviceStatus = deviceStatus;
         this.serviceUuid = serviceUuid;
         this.type = type;
         this.device = device;
@@ -39,19 +38,19 @@ public class BluetoothLeDevice {
         this.rssi = rssi;
     }
 
-    public String getId() {
-        return id;
+    public boolean isDeviceStatus() {
+        return deviceStatus;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setDeviceStatus(boolean deviceStatus) {
+        this.deviceStatus = deviceStatus;
     }
 
-    public boolean getStatus() {
+    public int getStatus() {
         return status;
     }
 
-    public void setStatus(boolean status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 
@@ -90,8 +89,8 @@ public class BluetoothLeDevice {
     private String address;
     private String name;
     private int rssi;
-    private String id;
-    private boolean status;
+    private boolean deviceStatus;
+    private int status;
     private String serviceUuid;
     private String characteristicUuid;
     private int type;

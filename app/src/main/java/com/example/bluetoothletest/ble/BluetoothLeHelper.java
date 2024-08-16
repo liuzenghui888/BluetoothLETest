@@ -33,8 +33,10 @@ public class BluetoothLeHelper {
     private BluetoothGattServer mBluetoothGattServer;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeListener mBluetoothLeListener;
+    private BluetoothGatt mBluetoothGattDevice;
 
     private static volatile BluetoothLeHelper instance;
+    private boolean mDeviceServiceStatus = false;
     private String TAG = "[BLE Demo App] BluetoothLeHelper";
 
     public synchronized static BluetoothLeHelper getInstance(Context context){
@@ -51,8 +53,6 @@ public class BluetoothLeHelper {
             mBluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
             mBluetoothAdapter = mBluetoothManager.getAdapter();
             mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
-            mBluetoothGattServer = mBluetoothManager.openGattServer(mContext, mGattServerCallback);
-            initBluetoothGattServer();
         }
     }
 
@@ -89,28 +89,6 @@ public class BluetoothLeHelper {
         }
     };
 
-    private final BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
-        @Override
-        public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-            Log.d(TAG, "BluetoothGattServerCallback onConnectionStateChange");
-        }
-
-        @Override
-        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
-            Log.d(TAG, "BluetoothGattServerCallback onCharacteristicReadRequest");
-            mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, characteristic.getValue());
-        }
-
-        @Override
-        public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-            Log.d(TAG, "BluetoothGattServerCallback onCharacteristicWriteRequest");
-            characteristic.setValue(value);
-            if (responseNeeded) {
-                mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
-            }
-        }
-    };
-
     public void connectBluetoothGatt(String address) {
         Log.d(TAG, "connectBluetoothGatt : " + address);
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
@@ -121,7 +99,9 @@ public class BluetoothLeHelper {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             Log.d(TAG, "BluetoothGattCallback onConnectionStateChange");
+            mBluetoothGattDevice = gatt;
             if (newState == BluetoothGatt.STATE_CONNECTED) {
+                mBluetoothLeListener.onChangeStatus(gatt.getDevice().getName());
                 gatt.discoverServices();
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
             }
@@ -130,7 +110,14 @@ public class BluetoothLeHelper {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             Log.d(TAG, "BluetoothGattCallback onServicesDiscovered");
-
+            BluetoothGattService service = gatt.getService(GattAttributes.LZH_BLE_P2P_SERVICE);
+            if (service != null) {
+                BluetoothGattCharacteristic characteristic = service.getCharacteristic(GattAttributes.LZH_BLE_P2P_ATTR);
+                if (characteristic != null) {
+                    characteristic.setValue(mBluetoothAdapter.getName());
+                    gatt.writeCharacteristic(characteristic);
+                }
+            }
         }
 
         @Override
@@ -141,9 +128,12 @@ public class BluetoothLeHelper {
         }
 
         @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
-            Log.d(TAG, "BluetoothGattCallback onCharacteristicChanged");
+        public void onCharacteristicWrite(BluetoothGatt gatt,
+                                          BluetoothGattCharacteristic characteristic,
+                                          int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.d(TAG, "Message sent successfully: " + new String(characteristic.getValue()));
+            }
         }
     };
 
@@ -172,6 +162,7 @@ public class BluetoothLeHelper {
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
             Log.d(TAG, "AdvertiseCallback onStartSuccess");
+            initBluetoothGattServer();
         }
 
         @Override
@@ -182,6 +173,7 @@ public class BluetoothLeHelper {
 
     public void initBluetoothGattServer() {
         Log.d(TAG, "initBluetoothGattServer");
+        mBluetoothGattServer = mBluetoothManager.openGattServer(mContext, mGattServerCallback);
         BluetoothGattService service = new BluetoothGattService(GattAttributes.LZH_BLE_P2P_SERVICE, BluetoothGattService.SERVICE_TYPE_PRIMARY);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(
                 GattAttributes.LZH_BLE_P2P_ATTR,
@@ -192,6 +184,32 @@ public class BluetoothLeHelper {
         mBluetoothGattServer.addService(service);
     }
 
+    private final BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+            if (newState == BluetoothGatt.STATE_CONNECTED) {
+                mDeviceServiceStatus = true;
+            } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                mDeviceServiceStatus = false;
+            }
+        }
+
+        @Override
+        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
+            Log.d(TAG, "BluetoothGattServerCallback onCharacteristicReadRequest");
+            mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, mBluetoothAdapter.getName().getBytes());
+        }
+
+        @Override
+        public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+            Log.d(TAG, "BluetoothGattServerCallback onCharacteristicWriteRequest");
+            if (characteristic.getUuid().equals(GattAttributes.LZH_BLE_P2P_ATTR)) {
+                String message = new String(value);
+                mBluetoothLeListener.onChangeStatus(message);
+            }
+        }
+    };
+
     //需要系统权限
     public String getMyDeviceAddress(){
         Log.d(TAG, "getMyDeviceAddress");
@@ -200,17 +218,6 @@ public class BluetoothLeHelper {
         } else {
             return "";
         }
-    }
-
-    public boolean sendNotification(BluetoothDevice device, String message){
-        Log.d(TAG, "sendNotification : device : " + device + " message : " + message);
-        BluetoothGattCharacteristic characteristic = mBluetoothGattServer
-                .getService(GattAttributes.LZH_BLE_P2P_SERVICE)
-                .getCharacteristic(GattAttributes.LZH_BLE_P2P_ATTR);
-
-        characteristic.setValue(message);
-
-        return mBluetoothGattServer.notifyCharacteristicChanged(device, characteristic, false);
     }
 
     public void clear() {

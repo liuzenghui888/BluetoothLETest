@@ -31,6 +31,9 @@ import java.util.List;
 @SuppressLint("MissingPermission")
 public class MainActivity extends AppCompatActivity implements BluetoothLeListener {
     private static final int REQUEST_CODE_BLE_PERMISSIONS = 2002;
+    private static final int BLE_DEVICE_DISCONNECT = 0;
+    private static final int BLE_DEVICE_CONNECT = 1;
+    private static final int BLE_DEVICE_INVITED = 2;
     private String TAG = "[BLE Demo App] MainActivity";
 
     private RecyclerView mRecyclerView;
@@ -116,20 +119,19 @@ public class MainActivity extends AppCompatActivity implements BluetoothLeListen
     }
 
     @Override
-    public void onAddBluetoothDevice(ScanResult device) {
+    public void onAddBluetoothDevice(ScanResult result) {
         Log.d(TAG, "onAddBluetoothDevice");
-        if (device != null && device.getScanRecord().getServiceUuids() != null) {
-            if (isBluetoothLeDevice(device.getScanRecord().getServiceUuids())) {
-                if (!isBluetoothLeRepeat(device.getDevice())) {
+        if (result != null && result.getScanRecord().getServiceUuids() != null) {
+            if (isBluetoothLeDevice(result.getScanRecord().getServiceUuids())) {
+                if (!isBluetoothLeRepeat(result.getDevice())) {
                     mLeDeviceList.add(new BluetoothLeDevice(
-                            device.getDevice().getName(),
-                            device.getDevice().getAddress(),
-                            device.getRssi(),
-                            "lzh",
-                            device.isConnectable(),
+                            result.getDevice().getAddress(),
+                            result.getDevice().getName(),
+                            result.getRssi(),
+                            result.isConnectable(),
                             GattAttributes.LZH_BLE_P2P_SERVICE.toString(),
                             1,
-                            device.getDevice()
+                            result.getDevice()
                             ));
                     mDeviceAdapter.setDeviceList(mLeDeviceList);
                 }
@@ -141,6 +143,17 @@ public class MainActivity extends AppCompatActivity implements BluetoothLeListen
     public void onScanLeDeviceStatus(boolean status) {
         isScanning = status;
         setmBtnHandleText();
+    }
+
+    @Override
+    public void onChangeStatus(String deviceName) {
+        Log.d(TAG, "onChangerStatus : " + deviceName);
+        for (BluetoothLeDevice bluetoothLeDevice : mLeDeviceList) {
+            if (deviceName.equals(bluetoothLeDevice.getName())) {
+                bluetoothLeDevice.setStatus(BLE_DEVICE_CONNECT);
+                runOnUiThread(() -> mDeviceAdapter.notifyDataSetChanged());
+            }
+        }
     }
 
     private void setmBtnHandleText() {

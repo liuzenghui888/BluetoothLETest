@@ -14,7 +14,7 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="4"
+            android:layout_weight="2"
             android:orientation="vertical"
             android:padding="10dp">
 
@@ -34,31 +34,21 @@
                 android:layout_marginBottom="4dp" />
 
             <TextView
-                android:id="@+id/tv_device_status"
+                android:id="@+id/tv_device_rssi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/red"
+                android:textSize="17sp"
+                android:text="@string/device_rssi"/>
+
+            <TextView
+                android:id="@+id/tv_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/device_status"
                 android:gravity="right"/>
 
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:id="@+id/ll_btn_send"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:visibility="gone"
-            android:orientation="vertical">
-            <Button
-                android:id="@+id/btn_send"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:text="@string/message_send"
-                android:textSize="16sp"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="20dp" />
         </LinearLayout>
 
         <LinearLayout

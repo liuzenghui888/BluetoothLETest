@@ -5,4 +5,5 @@ public interface BluetoothLeListener {
     void onBluetoothEnabled(boolean enabled);
     void onAddBluetoothDevice(ScanResult device);
     void onScanLeDeviceStatus(boolean status);
+    void onChangeStatus(String deviceName);
 }
